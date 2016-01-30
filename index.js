@@ -22,18 +22,15 @@ var connections = [];
 // Limit of players
 var playerLimit = 4;
 // Minimum players required to start
-var playerMin = 2;
+var playerMin = 1;
 // Screen connection
 var projector = null;
-// Debug projector toggle
-var debugProjector = true;
 // Projector port
 var projectorPort = 11000;
 // Client port
 var clientPort = 3000;
 // Socket server port
 var serverPort = 3080;
-
 
 /* Methods -------------------------------------------------------------------*/
 
@@ -67,7 +64,9 @@ Connection.prototype.requestStart = function() {
 		return p.ready;
 	});
 
-	if (players.length < playerMin) canLaunch = false;
+	if (players.length < playerMin) {
+		return this.emit(this, 'errorEvent', {e: 'NOT_ENOUGH_PLAYERS'});
+	}
 
 	if (canLaunch) {
 		players.forEach(function(p){
@@ -129,19 +128,8 @@ client.start({ port: clientPort, directory: './client' });
 // Start the Socket server, Handle connections
 io(serverPort).on('connection', initConnection);
 
-if (debugProjector) {
-	net.createServer(function(req) {
-		req.on('data', function(data) {
-			console.log('Debug projector got ' + JSON.stringify(data));
-		});
-	}).listen(projectorPort, function() {
-		projector = net.connect(projectorPort);
-	});
-}
-else {
-	// Start the connection with the screen
+net.createServer(function(req) {
+	projector = req;
+}).listen(projectorPort, function() {
 	projector = net.connect(projectorPort);
-	projector.on('error', function(err) {
-		console.log('Oups, could not reach the projector');
-	});
-}
+});

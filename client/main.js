@@ -53,7 +53,7 @@
 		var _self = this;
 
 		this.debug = true;
-		this.tunnel = io.connect('http://localhost:3080');
+		this.tunnel = io.connect('//' + window.location.hostname + ':3080');
 		this._currentPage = null;
 		this._connected = false;
 
