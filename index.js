@@ -130,6 +130,7 @@ io(serverPort).on('connection', initConnection);
 
 net.createServer(function(req) {
 	projector = req;
+	req.write(JSON.stringify({ type: 'inputEvent', e: 'SWIPE_LEFT' }) + '\n');
 }).listen(projectorPort, function() {
 	projector = net.connect(projectorPort);
 });
