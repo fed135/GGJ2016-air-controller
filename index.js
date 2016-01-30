@@ -1,22 +1,44 @@
+/**
+ * Air controller Server
+ * - Receives events from all the controllers and pipes them into a single 
+ *   stream to the screen
+ */
+
+'use strict';
+
+/* Requires ------------------------------------------------------------------*/
+
 var client = require('pushstate-server');
-client.start({ port: 3000, directory: './client' });
+var io = require('socket.io')
 
+/* Local variables -----------------------------------------------------------*/
+
+// An array of socket connections
 var players = [];
+// All the current connections
+var connections = [];
+// Limit of players
+var playerLimit = 4;
 
-var io = require('socket.io')(3080);
+/* Methods -------------------------------------------------------------------*/
 
-io.on('connection', function(socket) {
-	socket.on('userEvent', function(e) {
-		if (e.event) {
-			if(e.event === 'JOIN_LOBBY') {
-				if (players.length < 4) {
-					players.push(socket);
-					socket.emit('gameEvent', {event: 'JOINED_LOBBY'});
-				}
-				else {
-					socket.emit('gameEvent', {event: 'LOBBY_FULL'});
-				}
-			}
+function Connection(socket) {
+	this.socket = socket;
+	this.socket.on('userEvent', this.handleUserEvent.bind(this));
+	this.socket.on('gameEvent', this.handleGameEvent.bind(this));
+	this.socket.on('disconnect', this.disconnect.bind(this));
+}
+
+Connection.prototype.handleUserEvent = function() {
+	if(e.event === 'JOIN_LOBBY') {
+		if (players.length < playerLimit) {
+			players.push(socket);
+			socket.emit('gameEvent', {event: 'JOINED_LOBBY'});
+		}
+		else {
+			socket.emit('errorEvent', {event: 'LOBBY_FULL'});
+		}
+	}
 			if (e.event === 'READY') {
 				socket.__ready = true;
 			}
@@ -27,6 +49,8 @@ io.on('connection', function(socket) {
 				var canLaunch = players.every(function(p) {
 					return p.__ready;
 				});
+
+				if (players.length < 2) canLaunch = false;
 
 				if (canLaunch) {
 					players.forEach(function(p){
@@ -44,7 +68,7 @@ io.on('connection', function(socket) {
 				}
 				else {
 					socket.broadcast.emit('gameEvent', {event: 'PLAYERS_NOT_READY'});
-					socket.emit('gameEvent', {event: 'PLAYERS_NOT_READY'});
+					socket.emit('errorEvent', {event: 'PLAYERS_NOT_READY'});
 				}
 			}
 			if (e.event === 'LOGOUT') {
@@ -52,12 +76,16 @@ io.on('connection', function(socket) {
 
 				if (i>-1) players.splice(i,1);
 			}
-		}
-	});
+};
 
-	socket.on('disconnect', function() {
-		var i = players.indexOf(socket);
+function initConnection(socket) {
+	connections.push(new Connection(socket));
+}
 
-		if (i>-1) players.splice(i,1);
-	});
-});
+/* Init ----------------------------------------------------------------------*/
+
+// Serve the Client
+client.start({ port: 3000, directory: './client' });
+
+// Start the Socket server, Handle connections
+io(3080).on('connection', initConnection);

@@ -75,6 +75,22 @@
 				top:0px;
 				left:0px;
 				position: absolute;
+				overflow:hidden;
+			}
+
+			.error-messages {
+				background-color: #333;
+				width: 100%;
+				height: 35px;
+				position:absolute;
+				bottom:-50px;
+				display: block;
+				padding-top:15px;
+				text-align:center;
+			}
+
+			.red {
+				color:red;
 			}
 		</style>
 	</head>
@@ -110,6 +126,9 @@
 				<div id="hold-inst" class="instruction">
 					<h1>Hold!</h1>
 				</div>
+			</div>
+			<div class="error-messages">
+				<h3 class="red" id="error-message-body">Errors go here</h3>
 			</div>
 		</div>
 		<!-- Scripts -->

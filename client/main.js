@@ -55,11 +55,13 @@
 		this.debug = true;
 		this.tunnel = io.connect('http://localhost:3080');
 		this._currentPage = null;
+		this._connected = false;
 
 		this.tunnel.on('connect', function(){
-			console.log('connected!');
+			_self._connected = true;
 		});
 		this.tunnel.on('gameEvent', this.onEvent.bind(this));
+		this.tunnel.on('errorEvent', this.onError.bind(this));
 		
 		if (this.debug) {
 			this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
@@ -79,6 +81,12 @@
 		jC('#unready-button').click(this.unready.bind(this));
 		jC('#start-button').click(this.requestStart.bind(this));
 		jC('#leave-button').click(this.leave.bind(this));
+
+		setTimeout(function() {
+			if (!_self._connected) {
+				_self.onError({event: 'NO_CONNECTION'});
+			}
+		},2000);
 	}
 
 	App.prototype.changePage = function(id, tIn, tOut, callback) {
@@ -126,6 +134,15 @@
 		this.tunnel.emit('userEvent', {event: 'READY'});
 		jC('#ready-leave-set').hide();
 		jC('#start-unready-set').show();
+	};
+
+	App.prototype.onError = function(e) {
+		jC('#error-message-body').html(e.event);
+		jC('.error-messages').tween({
+			bottom:'0px'
+		}).then({
+			bottom: '-50px'
+		});
 	};
 
 	App.prototype.unready = function() {
