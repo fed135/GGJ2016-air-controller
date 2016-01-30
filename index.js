@@ -17,14 +17,41 @@ io.on('connection', function(socket) {
 					socket.emit('gameEvent', {event: 'LOBBY_FULL'});
 				}
 			}
-			if (e.userEvent === 'LOGOUT') {
+			if (e.event === 'READY') {
+				socket.__ready = true;
+			}
+			if (e.event === 'UNREADY') {
+				socket.__ready = false;
+			}
+			if (e.event === 'START_GAME') {
+				var canLaunch = players.every(function(p) {
+					return p.__ready;
+				});
+
+				if (canLaunch) {
+					players.forEach(function(p){
+						p.__ready = false;
+						p.__ingame = true
+					});
+					socket.broadcast.emit('gameEvent', {event: 'GAME_STARTING'});
+					socket.emit('gameEvent', {event: 'GAME_STARTING'});
+
+					/* TODO - loading logic */
+					setTimeout(function() {
+						socket.broadcast.emit('gameEvent', {event: 'GAME_LOADED'});
+						socket.emit('gameEvent', {event: 'GAME_LOADED'});
+					}, 700);					
+				}
+				else {
+					socket.broadcast.emit('gameEvent', {event: 'PLAYERS_NOT_READY'});
+					socket.emit('gameEvent', {event: 'PLAYERS_NOT_READY'});
+				}
+			}
+			if (e.event === 'LOGOUT') {
 				var i = players.indexOf(socket);
 
 				if (i>-1) players.splice(i,1);
 			}
-		}
-		else if (e.inputEvent) {
-			//TODO
 		}
 	});
 

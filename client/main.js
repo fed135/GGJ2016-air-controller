@@ -75,17 +75,10 @@
 			_self.tunnel.emit('userEvent', {event: 'JOIN_LOBBY'});
 		});
 
-		jC('#ready-button').click(function() {
-			_self.tunnel.emit('userEvent', {event: 'READY'});
-		});
-		jC('#start-button').click(function() {
-			_self.changePage.call(_self, 'loading', null, null);
-			_self.tunnel.emit('userEvent', {event: 'START_GAME'});
-		});
-		jC('#leave-button').click(function() {
-			_self.changePage.call(_self, 'splash', null, null);
-			_self.tunnel.emit('userEvent', {event: 'LOGOUT'});
-		});
+		jC('#ready-button').click(this.ready.bind(this));
+		jC('#unready-button').click(this.unready.bind(this));
+		jC('#start-button').click(this.requestStart.bind(this));
+		jC('#leave-button').click(this.leave.bind(this));
 	}
 
 	App.prototype.changePage = function(id, tIn, tOut, callback) {
@@ -119,17 +112,39 @@
 		if (e.event === 'JOINED_LOBBY') {
 			this.changePage('lobby', null, null);
 		}
+		if (e.event === 'GAME_STARTING') {
+			this.changePage('loading', null, null);
+		}
+		if (e.event === 'GAME_LOADED') {
+			this.startGame();
+		}
+		if (e.event === 'PLAYERS_NOT_READY') {}
+		if (e.event === 'LOBBY_FULL') {}
 	};
 
 	App.prototype.ready = function() {
+		this.tunnel.emit('userEvent', {event: 'READY'});
+		jC('#ready-leave-set').hide();
+		jC('#start-unready-set').show();
+	};
 
+	App.prototype.unready = function() {
+		this.tunnel.emit('userEvent', {event: 'UNREADY'});
+		jC('#ready-leave-set').show();
+		jC('#start-unready-set').hide();
 	};
 
 	App.prototype.leave = function() {
-
+		this.tunnel.emit('userEvent', {event: 'LOGOUT'});
+		this.changePage('splash', null, null);
 	};
 
+	App.prototype.requestStart = function() {
+		this.tunnel.emit('userEvent', {event: 'START_GAME'});
+	}
+
 	App.prototype.startGame = function() {
+		this.changePage('gamescene', null, null);
 		this.hideInstructions();
 	};
 
