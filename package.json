@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "pushstate-server": "^1.8.1",
     "socket.io": "^1.4.5"
   }
 }

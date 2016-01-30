@@ -1,33 +1,123 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Companion</title>
-		<style type="text/css"></style>
+		<title>Ritual</title>
+		<style type="text/css">
+			* {
+				margin:0px;
+				padding:0px;
+			}
+			html, body {
+				background-color: black;
+				height:100%;
+				width: 100%;
+				display: block;
+				position:absolute;
+				color: white;
+				font-family:Arial;
+			}
+			h1, h2 {
+				margin:auto;
+				top:0;
+				bottom:0;
+				left:0;
+				right:0;
+				position:absolute;
+				font-style: italic;
+				width: 50%;
+   			text-align: center;
+    		height: 50px;
+			}
+
+			.button {
+				text-align: center;				
+				font-weight:bold;	
+				font-size:16px;
+				text-shadow:1px 1px 0px rgba(0,0,0,0.4);
+				cursor: pointer;
+				position:relative;
+				margin: auto;
+				margin-top:50px;
+			}
+
+			.big {
+				width:40%;
+				height:35px;
+				padding-top:18px;
+			}
+
+			.medium {
+				width:30%;
+				height:30px;
+				padding-top:13px;
+			}
+
+			.green {
+				background-color: green;
+			}
+
+			.orange {
+				background-color: orange;
+			}
+
+			.page-buttons {
+				width: 100%;
+				height: 45%;
+				bottom: 0px;
+				position: absolute;
+				display: block;
+			}
+
+			.page, #wrapper {
+				width: 100%;
+				height: 100%;
+				display: block;
+				top:0px;
+				left:0px;
+				position: absolute;
+			}
+		</style>
 	</head>
 	<body>
 		<div id="wrapper">
 			<div id="splash" class="page">
-				Tap to join!
+				<h1>Tap to join!</h1>
 			</div>
 			<div id="lobby" class="page">
-				Now waiting in lobby!
-				<div id="ready-button" class="big-button">Ready</div>
-				<div id="leave-button" class="medium-button">Leave</div>
+				<h2>Now waiting in lobby!</h2>
+				<div class="page-buttons">
+					<div id="ready-button" class="big green button">Ready</div>
+					<div id="leave-button" class="medium orange button">Leave</div>
+				</div>
 			</div>
 			<div id="loading" class="page">
-				Loading...
+				<h1>Loading...</h1>
 			</div>
 			<div id="gamescene" class="page">
-				<div id="swippable">
-					Swipe here!
+				<div id="swippe-inst" class="instruction">
+					<h1>Swipe here!</h1>
+				</div>
+				<div id="shake-inst" class="instruction">
+					<h1>Shake it!</h1>
+				</div>
+				<div id="tap-inst" class="instruction">
+					<h1>Tap!</h1>
+				</div>
+				<div id="hold-inst" class="instruction">
+					<h1>Hold!</h1>
 				</div>
 			</div>
 		</div>
 		<!-- Scripts -->
+		<script src="main.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.6/hammer.min.js"></script>
+		<script src="https://raw.githubusercontent.com/adtile/Full-Tilt/master/dist/fulltilt.min.js"></script>
 
-		<script src="main.js"></script>
+		<script>
+			window.ritual = new App();
+			window.ritual.changePage('splash');
+		</script>
 	</body>
 </html>

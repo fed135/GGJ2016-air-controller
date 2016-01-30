@@ -56,43 +56,70 @@
 		this.tunnel = io.connect('http://localhost:3080');
 		this._currentPage = null;
 
-		this.tunnel.on('data', this.onEvent.bind(this));
+		this.tunnel.on('connect', function(){
+			console.log('connected!');
+		});
+		this.tunnel.on('gameEvent', this.onEvent.bind(this));
 		
 		if (this.debug) {
 			this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
 		}
 
+		// Body inits
+		jC('.page').hide();
+
 		// Binds
 		jC('#splash').click(function() {
 			//TODO: check with server
 			_self.changePage.call(_self, 'loading', null, null);
-			_self.tunnel.write({userEvent: 'JOIN_LOBBY'});
+			_self.tunnel.emit('userEvent', {event: 'JOIN_LOBBY'});
 		});
 
 		jC('#ready-button').click(function() {
-			_self.tunnel.write({userEvent: 'READY'});
+			_self.tunnel.emit('userEvent', {event: 'READY'});
 		});
 		jC('#start-button').click(function() {
 			_self.changePage.call(_self, 'loading', null, null);
-			_self.tunnel.write({userEvent: 'START_GAME'});
+			_self.tunnel.emit('userEvent', {event: 'START_GAME'});
 		});
 		jC('#leave-button').click(function() {
 			_self.changePage.call(_self, 'splash', null, null);
-			_self.tunnel.write({userEvent: 'LOGOUT'});
+			_self.tunnel.emit('userEvent', {event: 'LOGOUT'});
 		});
 	}
 
-	App.prototype.changePage = function(id, transitionIn, transitionOut, callback) {
+	App.prototype.changePage = function(id, tIn, tOut, callback) {
 		var _self = this;
-		transitionOut(jC('#'+this._currentPage), transitionOut, function() {
+		if (this.debug) console.log('Switching to page ' + id);
+		transitionOut(jC('#'+this._currentPage), tOut, function() {
 			_self._currentPage = id;
-			transitionIn(jC('#'+_self._currentPage), transitionIn, callback);
+			transitionIn(jC('#'+_self._currentPage), tIn, callback);
 		});
 	};
 
-	App.prototype.onEvent = function() {
+	App.prototype.notify = function() {
+		if (vibrate in navigator) {
+			navigator.vibrate([200,100,200]);
+		}
+	};
 
-	}
+	App.prototype.showInstruction = function(id) {
+		this.notify();
+		jC('#' + id + '-inst').show();
+		// Listen for input
+	};
+
+	App.prototype.hideInstructions = function(id) {
+		jC('.instruction').hide();
+		// Remove input listeners
+	};
+
+	App.prototype.onEvent = function(e) {
+		console.log(e);
+		if (e.event === 'JOINED_LOBBY') {
+			this.changePage('lobby', null, null);
+		}
+	};
 
 	App.prototype.ready = function() {
 
@@ -103,11 +130,12 @@
 	};
 
 	App.prototype.startGame = function() {
-
+		this.hideInstructions();
 	};
 
 	App.prototype.endGame = function() {
-
+		this.hideInstructions();
+		this.changePage('lobby', null, null);
 	};
 
 	App.prototype._updateStats = function() {
@@ -118,6 +146,5 @@
 
 	/* Init --------------------------------------------------------------------*/
 
-	window.app = new App();
-	window.app.changePage('splash');
+	window.App = App;
 })();
