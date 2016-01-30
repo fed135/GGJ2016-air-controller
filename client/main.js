@@ -82,12 +82,42 @@
 		jC('#start-button').click(this.requestStart.bind(this));
 		jC('#leave-button').click(this.leave.bind(this));
 
+		// Input events
+		var mc = new Hammer(document.getElementById('gamescene'));
+		mc.on('panLeft panRight tap press', function(ev) {
+			_self.registerInput.call(_self, ev.type);
+		});
+
+		this.shakeListener = new Shake({
+			threshold: 15,
+			timeout: 700
+		});
+		
+		window.addEventListener('shake', function() {
+			_self.registerInput.call(_self, 'shake');
+		}, false);
+
 		setTimeout(function() {
 			if (!_self._connected) {
 				_self.onError({e: 'NO_CONNECTION'});
 			}
 		},2000);
 	}
+
+	App.prototype.registerInput = function(i) {
+		var inputMap = {
+			shake: 'TILT',
+			panLeft: 'SWIPE_LEFT',
+			panRight: 'SWIPE_RIGHT',
+			tap: 'TAP',
+			press: 'HOLD'
+		};
+
+		console.log('sending input ' + inputMap[i]);
+		this.tunnel.emit('inputEvent', {
+			e: inputMap[i]
+		});
+	};
 
 	App.prototype.changePage = function(id, tIn, tOut, callback) {
 		var _self = this;
@@ -99,20 +129,37 @@
 	};
 
 	App.prototype.notify = function() {
-		if (vibrate in navigator) {
+		if ('vibrate' in navigator) {
 			navigator.vibrate([200,100,200]);
 		}
 	};
 
-	App.prototype.showInstruction = function(id) {
+	App.prototype.showInstruction = function(details) {
 		this.notify();
-		jC('#' + id + '-inst').show();
-		// Listen for input
+		jC('#' + details.action + '-inst').show();
+		var slots = jC('.slot').each(function(i) {
+			// Manual, ugh
+			$(this).removeClass('red');
+			$(this).removeClass('green');
+			$(this).removeClass('yellow');
+			$(this).removeClass('blue');
+			$(this).removeClass('white');
+
+			if (!details.players[i]) return;
+
+			$(this).addClass(details.players[i]);
+			console.log('show');
+			$(this).show();
+		});
+
+		this.instructionTimer = setTimeout(this.hideInstructions.bind(this), details.timer);
 	};
 
 	App.prototype.hideInstructions = function(id) {
+		console.log('hiding all');
 		jC('.instruction').hide();
-		// Remove input listeners
+		jC('.slot').hide();
+		clearTimeout(this.instructionTimer);
 	};
 
 	App.prototype.onEvent = function(evt) {
@@ -126,8 +173,15 @@
 		if (evt.e === 'GAME_LOADED') {
 			this.startGame();
 		}
-		if (evt.e === 'PLAYERS_NOT_READY') {}
-		if (evt.e === 'LOBBY_FULL') {}
+		if (evt.e === 'GAME_END') {
+			jC('#ready-leave-set').show();
+			jC('#start-unready-set').hide();
+			this.changePage('lobby', null, null);
+		}
+		if (evt.e === 'INSTRUCTION') {
+			this.hideInstructions();
+			this.showInstruction(evt.details);
+		}
 	};
 
 	App.prototype.ready = function() {
@@ -166,11 +220,13 @@
 
 	App.prototype.startGame = function() {
 		this.changePage('gamescene', null, null);
+		this.shakeListener.start();
 		this.hideInstructions();
 	};
 
 	App.prototype.endGame = function() {
 		this.hideInstructions();
+		this.shakeListener.stop();
 		this.changePage('lobby', null, null);
 	};
 

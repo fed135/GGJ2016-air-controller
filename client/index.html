@@ -101,7 +101,7 @@
 				margin:auto;
 			  width: 50%;
     		height: 100px;
-    		top: 100px;
+    		top: 75px;
     		position: relative;
     	}
 
@@ -114,7 +114,32 @@
 
     	.mask {
     		margin: auto;
-    		
+    		height:57px;
+    		width: 105px;
+    		display: block;
+    		position:absolute;
+    		background-size:100%;
+    		background-repeat:no-repeat;
+    	}
+
+    	.slot.red .mask {
+    		background-image: url(images/red.png);
+    	}
+
+    	.slot.green .mask {
+    		background-image: url(images/green.png);
+    	}
+
+    	.slot.blue .mask {
+    		background-image: url(images/blue.png);
+    	}
+
+    	.slot.yellow .mask {
+    		background-image: url(images/yellow.png);
+    	}
+
+    	.slot.white .mask {
+    		background-image: url(images/white.png);
     	}
 		</style>
 	</head>
@@ -138,34 +163,33 @@
 				<h1>Loading...</h1>
 			</div>
 			<div id="gamescene" class="page">
-				<div id="swippe-inst" class="instruction">
-					<h1>Swipe here!</h1>
+				<div id="SWIPE_LEFT-inst" class="instruction">
+					<h1>Swipe left!</h1>
 				</div>
-				<div id="shake-inst" class="instruction">
+				<div id="SWIPE_RIGHT-inst" class="instruction">
+					<h1>Swipe right!</h1>
+				</div>
+				<div id="TILT-inst" class="instruction">
 					<h1>Shake it!</h1>
 				</div>
-				<div id="tap-inst" class="instruction">
+				<div id="TAP-inst" class="instruction">
 					<h1>Tap!</h1>
 				</div>
-				<div id="hold-inst" class="instruction">
+				<div id="HOLD-inst" class="instruction">
 					<h1>Hold!</h1>
 				</div>
 				<div id="participants">
 					<div class="slot">
-						<img src="white.png" class="mask" id="slot-1-white" />
-						<img src="red.png" class="mask" id="slot-1-color" />
+						<div class="mask"></div>
 					</div>
 					<div class="slot">
-						<img src="white.png" class="mask" id="slot-2-white" />
-						<img src="green.png" class="mask" id="slot-2-color" />
+						<div class="mask"></div>
 					</div>
 					<div class="slot">
-						<img src="white.png" class="mask" id="slot-3-white" />
-						<img src="yellow.png" class="mask" id="slot-3-color" />
+						<div class="mask"></div>
 					</div>
 					<div class="slot">
-						<img src="white.png" class="mask" id="slot-4-white" />
-						<img src="blue.png" class="mask" id="slot-4-color" />
+						<div class="mask"></div>
 					</div>
 				</div>
 			</div>
@@ -175,10 +199,10 @@
 		</div>
 		<!-- Scripts -->
 		<script src="main.js"></script>
-		<script src="jquery.min.js"></script>
-		<script src="socket.io.min.js"></script>
-		<script src="hammer.min.js"></script>
-		<script src="fulltilt.min.js"></script>
+		<script src="libs/jquery.min.js"></script>
+		<script src="libs/socket.io.min.js"></script>
+		<script src="libs/hammer.min.js"></script>
+		<script src="libs/shake.js"></script>
 
 		<script>
 			window.ritual = new App();
