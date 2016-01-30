@@ -9,74 +9,113 @@
 /* Requires ------------------------------------------------------------------*/
 
 var client = require('pushstate-server');
-var io = require('socket.io')
+var io = require('socket.io');
+var net = require('net');
 
 /* Local variables -----------------------------------------------------------*/
 
+var colors = ['red', 'green', 'yellow', 'blue'];
 // An array of socket connections
 var players = [];
 // All the current connections
 var connections = [];
 // Limit of players
 var playerLimit = 4;
+// Minimum players required to start
+var playerMin = 2;
+// Screen connection
+var projector = null;
+// Debug projector toggle
+var debugProjector = true;
+// Projector port
+var projectorPort = 11000;
+// Client port
+var clientPort = 3000;
+// Socket server port
+var serverPort = 3080;
+
 
 /* Methods -------------------------------------------------------------------*/
 
 function Connection(socket) {
 	this.socket = socket;
+	this.ready = false;
+	this.ingame = false;
+	this.playerColor = null;
+
 	this.socket.on('userEvent', this.handleUserEvent.bind(this));
 	this.socket.on('gameEvent', this.handleGameEvent.bind(this));
 	this.socket.on('disconnect', this.disconnect.bind(this));
 }
 
-Connection.prototype.handleUserEvent = function() {
-	if(e.event === 'JOIN_LOBBY') {
-		if (players.length < playerLimit) {
-			players.push(socket);
-			socket.emit('gameEvent', {event: 'JOINED_LOBBY'});
-		}
-		else {
-			socket.emit('errorEvent', {event: 'LOBBY_FULL'});
-		}
-	}
-			if (e.event === 'READY') {
-				socket.__ready = true;
-			}
-			if (e.event === 'UNREADY') {
-				socket.__ready = false;
-			}
-			if (e.event === 'START_GAME') {
-				var canLaunch = players.every(function(p) {
-					return p.__ready;
-				});
-
-				if (players.length < 2) canLaunch = false;
-
-				if (canLaunch) {
-					players.forEach(function(p){
-						p.__ready = false;
-						p.__ingame = true
-					});
-					socket.broadcast.emit('gameEvent', {event: 'GAME_STARTING'});
-					socket.emit('gameEvent', {event: 'GAME_STARTING'});
-
-					/* TODO - loading logic */
-					setTimeout(function() {
-						socket.broadcast.emit('gameEvent', {event: 'GAME_LOADED'});
-						socket.emit('gameEvent', {event: 'GAME_LOADED'});
-					}, 700);					
-				}
-				else {
-					socket.broadcast.emit('gameEvent', {event: 'PLAYERS_NOT_READY'});
-					socket.emit('errorEvent', {event: 'PLAYERS_NOT_READY'});
-				}
-			}
-			if (e.event === 'LOGOUT') {
-				var i = players.indexOf(socket);
-
-				if (i>-1) players.splice(i,1);
-			}
+Connection.prototype.handleUserEvent = function(evt) {
+	console.log('got userEvent ' + evt.e);
+	if (evt.e === 'JOIN_LOBBY') this.joinLobby();
+	if (evt.e === 'READY') this.ready = true; 
+	if (evt.e === 'UNREADY') this.ready = false; 
+	if (evt.e === 'START_GAME') this.requestStart();
+	if (evt.e === 'LOGOUT') this.disconnect(); 
 };
+
+Connection.prototype.handleGameEvent = function(evt) {
+	console.log('got gameEvent ' + evt);
+};
+
+Connection.prototype.requestStart = function() {
+	var _self = this;
+	var canLaunch = players.every(function(p) {
+		return p.ready;
+	});
+
+	if (players.length < playerMin) canLaunch = false;
+
+	if (canLaunch) {
+		players.forEach(function(p){
+			p.ready = false;
+			p.ingame = true
+		});
+
+		this.broadcast(players, 'gameEvent', {e: 'GAME_STARTING'});
+
+		/* TODO - loading logic */
+		setTimeout(function() {
+			_self.broadcast(players, 'gameEvent', {e: 'GAME_LOADED'});
+		}, 700);					
+	}
+	else {
+		this.emit(this, 'errorEvent', {e: 'PLAYERS_NOT_READY'});
+	}
+};
+
+Connection.prototype.joinLobby = function() {
+	if (players.length < playerLimit) {
+		players.push(this);
+		this.color = colors.shift();
+		this.emit(this, 'gameEvent', {e: 'JOINED_LOBBY'});
+	}
+	else {
+		this.emit(this, 'errorEvent', {e: 'LOBBY_FULL'});
+	}
+};
+
+Connection.prototype.emit = function(peer, evt, payload) {
+	console.log('emitting ' + evt + ' to ' + peer.color);
+	if (peer instanceof Connection) peer.socket.emit(evt, payload);
+};
+
+Connection.prototype.broadcast = function(peers, evt, payload) {
+	peers.forEach(function(p) {
+		p.emit(p, evt, payload);
+	});
+};
+
+Connection.prototype.disconnect = function() {
+	var i = players.indexOf(this);
+	
+	if (this.color)	colors.unshift(this.color);
+
+	if (i>-1) players.splice(i,1);
+}
 
 function initConnection(socket) {
 	connections.push(new Connection(socket));
@@ -85,7 +124,24 @@ function initConnection(socket) {
 /* Init ----------------------------------------------------------------------*/
 
 // Serve the Client
-client.start({ port: 3000, directory: './client' });
+client.start({ port: clientPort, directory: './client' });
 
 // Start the Socket server, Handle connections
-io(3080).on('connection', initConnection);
+io(serverPort).on('connection', initConnection);
+
+if (debugProjector) {
+	net.createServer(function(req) {
+		req.on('data', function(data) {
+			console.log('Debug projector got ' + JSON.stringify(data));
+		});
+	}).listen(projectorPort, function() {
+		projector = net.connect(projectorPort);
+	});
+}
+else {
+	// Start the connection with the screen
+	projector = net.connect(projectorPort);
+	projector.on('error', function(err) {
+		console.log('Oups, could not reach the projector');
+	});
+}

@@ -74,7 +74,7 @@
 		jC('#splash').click(function() {
 			//TODO: check with server
 			_self.changePage.call(_self, 'loading', null, null);
-			_self.tunnel.emit('userEvent', {event: 'JOIN_LOBBY'});
+			_self.tunnel.emit('userEvent', {e: 'JOIN_LOBBY'});
 		});
 
 		jC('#ready-button').click(this.ready.bind(this));
@@ -84,7 +84,7 @@
 
 		setTimeout(function() {
 			if (!_self._connected) {
-				_self.onError({event: 'NO_CONNECTION'});
+				_self.onError({e: 'NO_CONNECTION'});
 			}
 		},2000);
 	}
@@ -115,50 +115,54 @@
 		// Remove input listeners
 	};
 
-	App.prototype.onEvent = function(e) {
-		console.log(e);
-		if (e.event === 'JOINED_LOBBY') {
+	App.prototype.onEvent = function(evt) {
+		console.log(evt);
+		if (evt.e === 'JOINED_LOBBY') {
 			this.changePage('lobby', null, null);
 		}
-		if (e.event === 'GAME_STARTING') {
+		if (evt.e === 'GAME_STARTING') {
 			this.changePage('loading', null, null);
 		}
-		if (e.event === 'GAME_LOADED') {
+		if (evt.e === 'GAME_LOADED') {
 			this.startGame();
 		}
-		if (e.event === 'PLAYERS_NOT_READY') {}
-		if (e.event === 'LOBBY_FULL') {}
+		if (evt.e === 'PLAYERS_NOT_READY') {}
+		if (evt.e === 'LOBBY_FULL') {}
 	};
 
 	App.prototype.ready = function() {
-		this.tunnel.emit('userEvent', {event: 'READY'});
+		this.tunnel.emit('userEvent', {e: 'READY'});
 		jC('#ready-leave-set').hide();
 		jC('#start-unready-set').show();
 	};
 
 	App.prototype.onError = function(e) {
-		jC('#error-message-body').html(e.event);
-		jC('.error-messages').tween({
+		jC('#error-message-body').html(e.e);
+		jC('.error-messages').animate({
 			bottom:'0px'
-		}).then({
-			bottom: '-50px'
+		},300, function() {
+			setTimeout(function(){
+				jC('.error-messages').animate({
+					bottom: '-50px'
+				},300);
+			},700);
 		});
 	};
 
 	App.prototype.unready = function() {
-		this.tunnel.emit('userEvent', {event: 'UNREADY'});
+		this.tunnel.emit('userEvent', {e: 'UNREADY'});
 		jC('#ready-leave-set').show();
 		jC('#start-unready-set').hide();
 	};
 
 	App.prototype.leave = function() {
-		this.tunnel.emit('userEvent', {event: 'LOGOUT'});
+		this.tunnel.emit('userEvent', {e: 'LOGOUT'});
 		this.changePage('splash', null, null);
 	};
 
 	App.prototype.requestStart = function() {
-		this.tunnel.emit('userEvent', {event: 'START_GAME'});
-	}
+		this.tunnel.emit('userEvent', {e: 'START_GAME'});
+	};
 
 	App.prototype.startGame = function() {
 		this.changePage('gamescene', null, null);
