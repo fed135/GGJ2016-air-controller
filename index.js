@@ -46,6 +46,8 @@ var instructionsMinDelay = 1000;
 var instructionsMaxDelay = 1000*2;
 // Length of a match
 var gameTimeLimit = 1000 * 20;
+// Re-insert player timer
+var regenPlayerTimer = 1000 * 2;
 
 /* Methods -------------------------------------------------------------------*/
 
@@ -103,7 +105,7 @@ Connection.prototype.requestStart = function() {
 			_self.broadcast(players, 'gameEvent', {e: 'GAME_LOADED'});
 			_self.emit(projector, 'gameEvent', {e: 'GAME_LOADED'});
 			// Start sending events
-			colors = ['red', 'green', 'yellow', 'blue']
+			colors = ['red', 'green', 'yellow', 'blue'];
 			sendInstructionEvent(true);
 			setTimeout(endGame, gameTimeLimit);
 		}, 700);					
@@ -181,13 +183,18 @@ function sendInstructionEvent(noMove) {
 	var _targetPlayers = [];
 
 	var _targetId;
+	var _targetColor;
 
 	// If anon or not
 	if (_isAnonymous === 0) {
 		for (var i = 0; i<_numPlayersNeeded; i++) {
 			if (availablePlayerStore.length > 0) {
 				_targetId = Math.floor(Math.random()*availablePlayerStore.length);
-				_targetPlayers.push(availablePlayerStore.splice(_playerId,1));
+				_targetColor = availablePlayerStore.splice(_targetId,1);
+				_targetPlayers.push(_targetColor);
+				setTimeout(function(){
+					availablePlayerStore.push(_targetColor);
+				}, regenPlayerTimer);
 			}
 			else {
 				_targetPlayers.push('white');
@@ -199,17 +206,24 @@ function sendInstructionEvent(noMove) {
 	}
 
 	var _player = _getPlayerByColor(colors[_playerId]);
-	var _payload = {
-		e: 'INSTRUCTION',
-		details: {
-			action: instructions[_actionId],
-			players: _targetPlayers,
-			timer: instructionTimeLimit
-		}
-	};
 
-	_player.emit(_player, 'gameEvent', _payload);
-	_player.emit(projector, 'gameEvent', _payload);
+	if (_player) {
+		console.log('Sending instruction ' + instructions[_actionId] + ' to ' + _player.color);
+		var _payload = {
+			e: 'INSTRUCTION',
+			details: {
+				action: instructions[_actionId],
+				players: _targetPlayers,
+				timer: instructionTimeLimit
+			}
+		};
+
+		_player.emit(_player, 'gameEvent', _payload);
+		_player.emit(projector, 'gameEvent', _payload);
+	}
+	else {
+		console.log('NO PLAYER FOUND AT INDEX ' + _playerId);
+	}
 }
 
 function _getPlayerByColor(color) {

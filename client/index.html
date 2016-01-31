@@ -2,10 +2,15 @@
 <html>
 	<head>
 		<title>Ritual</title>
+		<meta content="telephone=no" name="format-detection">
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" />
 		<style type="text/css">
 			* {
 				margin:0px;
 				padding:0px;
+			}
+			::-moz-selection, ::selection{
+				background:transparent;
 			}
 			html, body {
 				background-color: black;
@@ -141,10 +146,133 @@
     	.slot.white .mask {
     		background-image: url(images/white.png);
     	}
+
+    	#hud {
+    		position:absolute;
+    		z-index: 2;
+    		pointer-events:none;
+    		height:98%;
+    		width: 98%;
+    		padding:1%;
+     	}
+
+    	.hori {
+    		background-image: url(images/hori-border.png);
+    		background-repeat: repeat-x;
+    		width: 98%;
+    		height:37px;
+    		display: block;
+    	}
+
+    	.vert {
+    		background-image: url(images/vert-border.png);
+    		background-repeat: repeat-y;
+    		height:98%;
+    		width: 44px;
+    		display: block;
+    	}
+
+    	.left-bar {
+    		position: absolute;
+    		left: 0px;
+    	}
+
+    	.right-bar {
+    		position: absolute;
+    		right: 0px;
+    	}
+
+    	.top-bar {
+    		position: absolute;
+    		top:0px;
+    	}
+
+    	.bottom-bar {
+    		position: absolute;
+    		bottom:0px;
+    	}
+
+    	.corner {
+    		background-image: url(images/corner.png);
+    		width: 60px;
+    		height: 71px;
+    		display: block;
+    	}
+
+    	.tl {
+    		position: absolute;
+    		top:0px;
+    		left:0px;
+    	}
+
+    	.tr {
+    		position: absolute;
+    		top:0px;
+    		right: 0px;
+    	}
+
+    	.bl {
+    		position: absolute;
+    		bottom:0px;
+    		left: 0px;
+    	}
+
+    	.br {
+    		position: absolute;
+    		bottom: 0px;
+    		right: 0px;
+    	}
+
+    	.jewel {
+    		display: block;
+    		margin-top: 23px;
+    		margin-left: 19px;
+    		position: relative;
+    		height: 25px;
+    		width:20px;
+    	}
+
+    	#hud.red .jewel {
+    		background-image: url(images/red-jewel.png);
+    	}
+
+    	#hud.green .jewel {
+    		background-image: url(images/green-jewel.png);
+    	}
+
+    	#hud.yellow .jewel {
+    		background-image: url(images/yellow-jewel.png);
+    	}
+
+    	#hud.blue .jewel {
+    		background-image: url(images/blue-jewel.png);
+    	}
+
+    	#wrapper {
+    		background-color: black;
+    	}
 		</style>
 	</head>
 	<body>
 		<div id="wrapper">
+			<div id="hud">
+				<div class="hori top-bar"></div>
+				<div class="hori bottom-bar"></div>
+				<div class="vert left-bar"></div>
+				<div class="vert right-bar"></div>
+				<div class="corner tl">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner tr">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner bl">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner br">
+					<div class="jewel"></div>
+				</div>
+			</div>
 			<div id="splash" class="page">
 				<h1>Tap to join!</h1>
 			</div>

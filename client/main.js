@@ -64,7 +64,7 @@
 		this.tunnel.on('errorEvent', this.onError.bind(this));
 		
 		if (this.debug) {
-			this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
+			//this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
 		}
 
 		// Body inits
@@ -72,9 +72,13 @@
 
 		// Binds
 		jC('#splash').click(function() {
-			//TODO: check with server
+			var tag = document.getElementById('wrapper');
+			var fsEvent = (tag.requestFullScreen)?"requestFullScreen":(tag.mozRequestFullScreen)?"mozRequestFullScreen":(tag.webkitRequestFullScreenWithKeys)?"webkitRequestFullScreenWithKeys":(tag.webkitRequestFullScreen)?"webkitRequestFullScreen":"FullscreenError";
+
 			_self.changePage.call(_self, 'loading', null, null);
 			_self.tunnel.emit('userEvent', {e: 'JOIN_LOBBY'});
+			// Enter full screen
+			tag[fsEvent]();			
 		});
 
 		jC('#ready-button').click(this.ready.bind(this));
@@ -134,23 +138,44 @@
 		}
 	};
 
+	App.prototype.shake = function() {
+		var elem = jC('#gamescene');
+		elem.animate({
+			'padding-top': '8px'
+		}, 175, function() {
+			elem.animate({
+				'padding-top': '-4px'
+			}, 175, function() {
+				elem.animate({
+					'padding-top': '0px'
+				}, 175);
+			});
+		});
+	};
+
 	App.prototype.showInstruction = function(details) {
 		this.notify();
-		jC('#' + details.action + '-inst').show();
+		var inst = jC('#' + details.action + '-inst');
+		var _self = this;
+		var _ref;
 		var slots = jC('.slot').each(function(i) {
+			_ref = $(this);
 			// Manual, ugh
-			$(this).removeClass('red');
-			$(this).removeClass('green');
-			$(this).removeClass('yellow');
-			$(this).removeClass('blue');
-			$(this).removeClass('white');
+			_ref.removeClass('red');
+			_ref.removeClass('green');
+			_ref.removeClass('yellow');
+			_ref.removeClass('blue');
+			_ref.removeClass('white');
 
 			if (!details.players[i]) return;
 
-			$(this).addClass(details.players[i]);
-			console.log('show');
-			$(this).show();
+			_ref.addClass(details.players[i]);
+			
+			_ref.show();
 		});
+
+		inst.show();
+		_self.shake();
 
 		this.instructionTimer = setTimeout(this.hideInstructions.bind(this), details.timer);
 	};
@@ -165,7 +190,10 @@
 	App.prototype.onEvent = function(evt) {
 		console.log(evt);
 		if (evt.e === 'JOINED_LOBBY') {
+			this.color = evt.details.color;
 			this.changePage('lobby', null, null);
+			this.notify();
+			jC('#hud').addClass(this.color);
 		}
 		if (evt.e === 'GAME_STARTING') {
 			this.changePage('loading', null, null);
@@ -212,6 +240,10 @@
 	App.prototype.leave = function() {
 		this.tunnel.emit('userEvent', {e: 'LOGOUT'});
 		this.changePage('splash', null, null);
+		jC('#hud').removeClass('red');
+		jC('#hud').removeClass('green');
+		jC('#hud').removeClass('yellow');
+		jC('#hud').removeClass('blue');
 	};
 
 	App.prototype.requestStart = function() {
