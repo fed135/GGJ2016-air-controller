@@ -15,12 +15,18 @@
 				background:transparent;
 			}
 			/*Lock landscape */
-			@media (orientation: portrait) {
+			@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: portrait) {
 				body {
 					-webkit-transform: rotate(-90deg);
 					-moz-transform: rotate(-90deg);
 					-ms-transform: rotate(-90deg);
 					transform: rotate(-90deg);
+					width:100%;
+					height:100%;
+					overflow:hidden;
+					position:absolute;
+					top:0;
+					left:0;
 				}
 			}
 
@@ -206,6 +212,8 @@
     		background-image: url(images/white.png);
     	}
 
+    	.inactive { opacity: 0.2 }
+
     	#hud {
     		position:absolute;
     		z-index: 2;
@@ -333,7 +341,7 @@
     	}
 
     	.lobby-mask {
-    		width:125px;
+    		width:105px;
     		height:114px;
     		background-size:100%;
     		background-repeat:no-repeat;
@@ -431,17 +439,17 @@
 					<div id="start-button" class="big start-btn button"></div>
 					<div id="unready-button" class="medium unready-btn button"></div>
 				</div>
-				<div id="lobby-mask-red" class="lobby-mask"></div>
-				<div id="lobby-mask-green" class="lobby-mask"></div>
-				<div id="lobby-mask-blue" class="lobby-mask"></div>
-				<div id="lobby-mask-yellow" class="lobby-mask"></div>
+				<div id="lobby-mask-red" class="lobby-mask inactive"></div>
+				<div id="lobby-mask-green" class="lobby-mask inactive"></div>
+				<div id="lobby-mask-blue" class="lobby-mask inactive"></div>
+				<div id="lobby-mask-yellow" class="lobby-mask inactive"></div>
 			</div>
 			<div id="loading" class="page">
-				<h1>Loading...</h1>
+				<h1 class="center">Loading...</h1>
 			</div>
 			<div id="countdown" class="page">
 				<h1 id="ready" class="center">Ready...</h1>
-				<h1 id="go" class="center">GO!</h1>
+				<h1 id="go" class="center" style="display:none;">GO!</h1>
 			</div>
 			<div id="gamescene" class="page">
 				<div id="SWIPE_LEFT-inst" class="instruction">
@@ -460,16 +468,16 @@
 					<h1>Hold!</h1>
 				</div>
 				<div id="participants">
-					<div class="slot">
+					<div class="slot inactive red" id="slot-red">
 						<div class="mask"></div>
 					</div>
-					<div class="slot">
+					<div class="slot inactive green" id="slot-green">
 						<div class="mask"></div>
 					</div>
-					<div class="slot">
+					<div class="slot inactive yellow" id="slot-yellow">
 						<div class="mask"></div>
 					</div>
-					<div class="slot">
+					<div class="slot inactive blue" id="slot-blue">
 						<div class="mask"></div>
 					</div>
 				</div>

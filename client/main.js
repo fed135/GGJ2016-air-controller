@@ -92,7 +92,7 @@
 
 		// Input events
 		var mc = new Hammer(document.getElementById('gamescene'));
-		mc.on('panLeft panRight tap press', function(ev) {
+		mc.on('swipeleft swiperight tap press', function(ev) {
 			_self.registerInput.call(_self, ev.type);
 		});
 
@@ -113,10 +113,11 @@
 	}
 
 	App.prototype.registerInput = function(i) {
+		this.notify([100], '#242');
 		var inputMap = {
 			shake: 'TILT',
-			panLeft: 'SWIPE_LEFT',
-			panRight: 'SWIPE_RIGHT',
+			swipeleft: 'SWIPE_LEFT',
+			swiperight: 'SWIPE_RIGHT',
 			tap: 'TAP',
 			press: 'HOLD'
 		};
@@ -138,16 +139,19 @@
 		});
 	};
 
-	App.prototype.notify = function() {
+	App.prototype.notify = function(pattern, color) {
+		pattern = pattern || [200,100,200];
+		color = color || '#333';
+
 		if ('vibrate' in navigator) {
-			navigator.vibrate([200,100,200]);
+			navigator.vibrate(pattern);
 		}
 		var elem = jC('#wrapper');
-		elem.css('backgroundColor', '#333');
+		elem.css('backgroundColor', color);
 		setTimeout(function() {
 			elem.css('backgroundColor', 'black');
 			setTimeout(function() {
-				elem.css('backgroundColor', '#333');
+				elem.css('backgroundColor', color);
 				setTimeout(function() {
 					elem.css('backgroundColor', 'black');
 				},100);
@@ -172,34 +176,21 @@
 
 	App.prototype.showInstruction = function(details) {
 		this.notify();
-		var inst = jC('#' + details.action + '-inst');
-		var _self = this;
-		var _ref;
-		var slots = jC('.slot').each(function(i) {
-			_ref = $(this);
-			// Manual, ugh
-			_ref.removeClass('red');
-			_ref.removeClass('green');
-			_ref.removeClass('yellow');
-			_ref.removeClass('blue');
-			_ref.removeClass('white');
+		jC('#' + details.action + '-inst').show();
 
-			if (!details.players[i]) return;
-
-			_ref.addClass(details.players[i]);
-			
-			_ref.show();
+		jC('.slot').addClass('inactive');
+		details.players.forEach(function(col) {
+			jC('#slot-' + col).removeClass('inactive');
 		});
 
-		inst.show();
-		_self.shake();
+		this.shake();
 
 		this.instructionTimer = setTimeout(this.hideInstructions.bind(this), details.timer);
 	};
 
 	App.prototype.hideInstructions = function(id) {
 		jC('.instruction').hide();
-		jC('.slot').hide();
+		jC('.slot').addClass('inactive');
 		clearTimeout(this.instructionTimer);
 	};
 
@@ -226,18 +217,25 @@
 		if (evt.e === 'PLAYER_LIST_UPDATE') {
 			if (this._currentPage === 'lobby') {
 				jC('.lobby-mask').hide();
+				jC('.lobby-mask').addClass('inactive');
 				evt.details.players.forEach(function(col) {
-					jC('#lobby-mask-' + col).show();
+					jC('#lobby-mask-' + col.color).show();
+					if (col.ready) jC('#lobby-mask-' + col.color).removeClass('inactive');
 				});
 			}
 		}
 		if (evt.e === 'GAME_END') {
+			jC('#return-button').hide();
+			this.notify([1000,50,100]);
 			jC('#ready-leave-set').show();
 			jC('#start-unready-set').hide();
 			jC('#game-result').html(evt.details.result);
 			jC('#lobby-status').html('Now waiting in lobby!');
 			this.shakeListener.stop();
 			this.changePage('endgame', null, null);
+			setTimeout(function() {
+				jC('#return-button').show();
+			},2500);
 		}
 		if (evt.e === 'INSTRUCTION') {
 			this.hideInstructions();

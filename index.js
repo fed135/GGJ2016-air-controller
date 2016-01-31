@@ -27,7 +27,7 @@ var connections = [];
 // Limit of players
 var playerLimit = 4;
 // Minimum players required to start
-var playerMin = 2;
+var playerMin = 1;
 // Screen connection
 var projector = null;
 // Projector port
@@ -61,7 +61,7 @@ var scoreGoal = 1000;
 // Game timer
 var gameTimer = null;
 // ------------------------------------------------------------------!-Point map
-var points = [2,2,5,3,1];
+var points = [10,10,25,15,5];
 // Expect map
 var expectMap = {
 	red: [],
@@ -91,12 +91,35 @@ Connection.prototype.handleUserEvent = function(evt) {
 	if (evt.e === 'JOIN_LOBBY') this.joinLobby();
 
 	if (this.color) {
-		if (evt.e === 'READY') this.ready = true; 
-		if (evt.e === 'UNREADY') this.ready = false; 
+		if (evt.e === 'READY') {
+			this.ready = true; 
+			sendPlayerUpdate();
+		}
+		if (evt.e === 'UNREADY') {
+			this.ready = false; 
+			sendPlayerUpdate();
+		}
 		if (evt.e === 'START_GAME') this.requestStart();
 		if (evt.e === 'LOGOUT') this.disconnect();
 	}
 };
+
+function sendPlayerUpdate() {
+	var _payload = {
+		e: 'PLAYER_LIST_UPDATE',
+		details: {
+			players: players.map(function(p) {
+				return {
+					color: p.color,
+					ready: p.ready
+				};
+			})
+		}
+	};
+
+	Connection.prototype.broadcast.call(this, players, 'gameEvent', _payload);
+	Connection.prototype.emit.call(this, projector, 'gameEvent', _payload);
+}
 
 Connection.prototype.stepTotem = function() {
 	if (totemScore >= scoreGoal) {
@@ -196,17 +219,7 @@ Connection.prototype.joinLobby = function() {
 			}
 		});
 
-		var _payload = {
-			e: 'PLAYER_LIST_UPDATE',
-			details: {
-				players: players.map(function(p) {
-					return p.color;
-				})
-			}
-		};
-
-		this.broadcast(players, 'gameEvent', _payload);
-		this.emit(projector, 'gameEvent', _payload);
+		sendPlayerUpdate();
 	}
 	else {
 		this.emit(this, 'errorEvent', {e: 'LOBBY_FULL'});
@@ -239,17 +252,7 @@ Connection.prototype.disconnect = function(stripOnly) {
 		availablePlayerStore.unshift(this.color);
 	}
 
-	var _payload = {
-		e: 'PLAYER_LIST_UPDATE',
-		details: {
-			players: players.map(function(p) {
-				return p.color;
-			})
-		}
-	};
-
-	Connection.prototype.broadcast.call(this, players, 'gameEvent', _payload);
-	Connection.prototype.emit.call(this, projector, 'gameEvent', _payload);
+	sendPlayerUpdate();
 }
 
 function initConnection(socket) {
@@ -282,6 +285,7 @@ function endGame() {
 	players.forEach(function(e) {
 		e.disconnect(true);
 	});
+	players = [];
 }
 
 function sendInstructionEvent(noMove) {
@@ -293,37 +297,24 @@ function sendInstructionEvent(noMove) {
 	console.log('Rolling a move for ' + players.length + ' players');
 
 	var _actionId = Math.floor(Math.random()*instructions.length);
-	var _playerId = Math.floor(Math.random()*players.length);
+	var _playerId = 0;
 	var _numPlayersNeeded = 1 + Math.floor(Math.random()*players.length);
-	var _isAnonymous = Math.floor(Math.random()*2);
 	var _targetPlayers = [];
 
 	// If anon or not
-	if (_isAnonymous === 0) {
-		console.log('need to choose from ' + JSON.stringify(availablePlayerStore));
-		for (var i = 0; i<_numPlayersNeeded; i++) {
-			(function(_i) {
-				var _targetId;
-				var _targetColor;
+	console.log('need to choose from ' + JSON.stringify(availablePlayerStore));
 
-				if (availablePlayerStore.length > 0) {
-					_targetId = Math.floor(Math.random()*availablePlayerStore.length);
-					_targetColor = availablePlayerStore.splice(_targetId,1)[0];
-					_targetPlayers.push(_targetColor);
-					setTimeout(function(){
-						if (availablePlayerStore.indexOf(_targetColor) === -1) {
-							availablePlayerStore.push(_targetColor);
-						}
-					}, regenPlayerTimer);
-				}
-				else {
-					_targetPlayers.push('white');
-				}
-			})(i);
+	if (availablePlayerStore.length > 1) {
+		while(_targetPlayers.length < _numPlayersNeeded) {
+			var _targetId = Math.floor(Math.random()*availablePlayerStore.length);
+			var _targetColor = availablePlayerStore[_targetId];
+
+			if (_targetPlayers.indexOf(_targetColor) !== -1) continue;
+			_targetPlayers.push(_targetColor);
 		}
 	}
 	else {
-		_targetPlayers.push('white');
+		_targetPlayers.push('red');
 	}
 
 	var _player = _getPlayerByColor(colors[_playerId]);
@@ -370,7 +361,8 @@ client.start({ port: clientPort, directory: './client' });
 io(serverPort).on('connection', initConnection);
 
 net.createServer(function(req) {
-	projector = req;
+	// First come, first serve
+	if (projector === null) projector = req;
 }).listen(projectorPort, function() {
 	projector = net.connect(projectorPort);
 });
