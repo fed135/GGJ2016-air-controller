@@ -131,6 +131,11 @@ Connection.prototype.handleInputEvent = function(evt) {
 	Connection.prototype.emit.call(this, projector, 'inputEvent', evt);
 };
 
+Connection.prototype.handleInputEvent = function(evt) {
+	evt.player = this.color;
+	players[0].emit(projector, 'inputEvent', evt);
+};
+
 Connection.prototype.requestStart = function() {
 	var _self = this;
 	var canLaunch = players.every(function(p) {

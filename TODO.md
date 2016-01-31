@@ -29,8 +29,3 @@
 		players: '2'
 	}
 })
-
-GAME_STARTING
-GAME_LOADED
-GAME_END
-TOTEM_SCORE

@@ -97,9 +97,6 @@
 			threshold: 15,
 			timeout: 700
 		});
-
-		// Test
-		//this.onError({e: 'Test'});
 		
 		window.addEventListener('shake', function() {
 			_self.registerInput.call(_self, 'shake');
@@ -216,6 +213,7 @@
 			jC('#ready-leave-set').show();
 			jC('#start-unready-set').hide();
 			jC('#game-result').html(evt.details.result);
+			this.shakeListener.stop();
 			this.changePage('endgame', null, null);
 		}
 		if (evt.e === 'INSTRUCTION') {
@@ -266,12 +264,6 @@
 		this.changePage('gamescene', null, null);
 		this.shakeListener.start();
 		this.hideInstructions();
-	};
-
-	App.prototype.endGame = function() {
-		this.hideInstructions();
-		this.shakeListener.stop();
-		this.changePage('splash', null, null);
 	};
 
 	App.prototype._updateStats = function() {
