@@ -41,7 +41,7 @@ var instructionTimer = null;
 // --------------------------------------------!-Time to complete an instruction
 var instructionTimeLimit = 1000*3;
 // ----------------------------------------------!-Min time between instructions
-var instructionsMinDelay = 1000;
+var instructionsMinDelay = 1750;
 // ----------------------------------------------!-Max time between instructions
 var instructionsMaxDelay = 1000*2;
 // ----------------------------------------------------------!-Length of a match
@@ -67,8 +67,7 @@ var expectMap = {
 	red: [],
 	green: [],
 	blue: [],
-	yellow: [],
-	white: []
+	yellow: []
 };
 
 /* Methods -------------------------------------------------------------------*/
@@ -145,18 +144,15 @@ Connection.prototype.handleGameEvent = function(evt) {
 Connection.prototype.handleInputEvent = function(evt) {
 	console.log('got inputEvent ' + evt.e + ' from ' + this.color);
 
+	if (!this.color) return;
 	evt.player = this.color;
 
-	if (expectMap[this.color].indexOf(evt.e) > -1 || expectMap['white'].indexOf(evt.e) > -1) {
+	if (expectMap[this.color].indexOf(evt.e) > -1) {
 		totemScore+=points[instructions.indexOf(evt.e)];
+		//console.log('POINTS ADDED!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1');
 	}
 
 	Connection.prototype.emit.call(this, projector, 'inputEvent', evt);
-};
-
-Connection.prototype.handleInputEvent = function(evt) {
-	evt.player = this.color;
-	players[0].emit(projector, 'inputEvent', evt);
 };
 
 Connection.prototype.requestStart = function() {
@@ -227,6 +223,7 @@ Connection.prototype.joinLobby = function() {
 };
 
 Connection.prototype.emit = function(peer, evt, payload) {
+	if (!peer) return;
 	console.log('emitting ' + evt + ':' + payload.e + ' to ' + (peer.color || 'projector'));
 	if (peer instanceof Connection) peer.socket.emit(evt, payload);
 	else if (peer.write) {
@@ -363,6 +360,4 @@ io(serverPort).on('connection', initConnection);
 net.createServer(function(req) {
 	// First come, first serve
 	if (projector === null) projector = req;
-}).listen(projectorPort, function() {
-	projector = net.connect(projectorPort);
-});
+}).listen(projectorPort);

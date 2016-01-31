@@ -97,8 +97,8 @@
 		});
 
 		this.shakeListener = new Shake({
-			threshold: 15,
-			timeout: 700
+			threshold: 10,
+			timeout: 400
 		});
 		
 		window.addEventListener('shake', function() {
