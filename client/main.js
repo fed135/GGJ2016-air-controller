@@ -230,7 +230,7 @@
 			jC('#ready-leave-set').show();
 			jC('#start-unready-set').hide();
 			jC('#game-result').html(evt.details.result);
-			jC('#lobby-status').html('Now waiting in lobby!');
+			jC('#lobby-status').html('Waiting in lobby!');
 			this.shakeListener.stop();
 			this.changePage('endgame', null, null);
 			setTimeout(function() {
@@ -245,7 +245,7 @@
 
 	App.prototype.ready = function() {
 		this.tunnel.emit('userEvent', {e: 'READY'});
-		jC('#lobby-status').html('Waiting for other players...');
+		jC('#lobby-status').html('Waiting for players...');
 		jC('#ready-leave-set').hide();
 		jC('#start-unready-set').show();
 	};
@@ -265,7 +265,7 @@
 
 	App.prototype.unready = function() {
 		this.tunnel.emit('userEvent', {e: 'UNREADY'});
-		jC('#lobby-status').html('Now waiting in lobby!');
+		jC('#lobby-status').html('Waiting in lobby!');
 		jC('#ready-leave-set').show();
 		jC('#start-unready-set').hide();
 	};

@@ -272,7 +272,7 @@ function endGame() {
 	var _payload = {
 		e: 'GAME_END',
 		details: {
-			result: (totemScore >= scoreGoal)?'The ritual was a great Success, the crowd wants more!':'You have shamed yourself - the ritual was a failure!'
+			result: (totemScore >= scoreGoal)?'The ritual was a great Success, you rock!':'The ritual was a failure - shame on you!'
 		}
 	};
 
