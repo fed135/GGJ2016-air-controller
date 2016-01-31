@@ -53,7 +53,7 @@
 		var _self = this;
 
 		this.debug = true;
-		this.tunnel = io.connect('http://localhost:3080');
+		this.tunnel = io.connect('//' + window.location.hostname + ':3080');
 		this._currentPage = null;
 		this._connected = false;
 
@@ -64,7 +64,7 @@
 		this.tunnel.on('errorEvent', this.onError.bind(this));
 		
 		if (this.debug) {
-			this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
+			//this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
 		}
 
 		// Body inits
@@ -72,15 +72,38 @@
 
 		// Binds
 		jC('#splash').click(function() {
-			//TODO: check with server
+			var tag = document.getElementById('wrapper');
+			var fsEvent = (tag.requestFullScreen)?"requestFullScreen":(tag.mozRequestFullScreen)?"mozRequestFullScreen":(tag.webkitRequestFullScreenWithKeys)?"webkitRequestFullScreenWithKeys":(tag.webkitRequestFullScreen)?"webkitRequestFullScreen":"FullscreenError";
+
 			_self.changePage.call(_self, 'loading', null, null);
 			_self.tunnel.emit('userEvent', {e: 'JOIN_LOBBY'});
+			// Enter full screen
+			tag[fsEvent]();			
 		});
 
 		jC('#ready-button').click(this.ready.bind(this));
 		jC('#unready-button').click(this.unready.bind(this));
+		jC('#return-button').click(this.leave.bind(this));
 		jC('#start-button').click(this.requestStart.bind(this));
 		jC('#leave-button').click(this.leave.bind(this));
+
+		// Input events
+		var mc = new Hammer(document.getElementById('gamescene'));
+		mc.on('panLeft panRight tap press', function(ev) {
+			_self.registerInput.call(_self, ev.type);
+		});
+
+		this.shakeListener = new Shake({
+			threshold: 15,
+			timeout: 700
+		});
+
+		// Test
+		//this.onError({e: 'Test'});
+		
+		window.addEventListener('shake', function() {
+			_self.registerInput.call(_self, 'shake');
+		}, false);
 
 		setTimeout(function() {
 			if (!_self._connected) {
@@ -88,6 +111,23 @@
 			}
 		},2000);
 	}
+
+	App.prototype.registerInput = function(i) {
+		var inputMap = {
+			shake: 'TILT',
+			panLeft: 'SWIPE_LEFT',
+			panRight: 'SWIPE_RIGHT',
+			tap: 'TAP',
+			press: 'HOLD'
+		};
+
+		if (this._currentPage === 'gamescene') {
+			console.log('sending input ' + inputMap[i]);
+			this.tunnel.emit('inputEvent', {
+				e: inputMap[i]
+			});
+		}
+	};
 
 	App.prototype.changePage = function(id, tIn, tOut, callback) {
 		var _self = this;
@@ -99,35 +139,89 @@
 	};
 
 	App.prototype.notify = function() {
-		if (vibrate in navigator) {
+		if ('vibrate' in navigator) {
 			navigator.vibrate([200,100,200]);
 		}
 	};
 
-	App.prototype.showInstruction = function(id) {
+	App.prototype.shake = function() {
+		var elem = jC('#gamescene');
+		elem.animate({
+			'padding-top': '8px'
+		}, 175, function() {
+			elem.animate({
+				'padding-top': '-4px'
+			}, 175, function() {
+				elem.animate({
+					'padding-top': '0px'
+				}, 175);
+			});
+		});
+	};
+
+	App.prototype.showInstruction = function(details) {
 		this.notify();
-		jC('#' + id + '-inst').show();
-		// Listen for input
+		var inst = jC('#' + details.action + '-inst');
+		var _self = this;
+		var _ref;
+		var slots = jC('.slot').each(function(i) {
+			_ref = $(this);
+			// Manual, ugh
+			_ref.removeClass('red');
+			_ref.removeClass('green');
+			_ref.removeClass('yellow');
+			_ref.removeClass('blue');
+			_ref.removeClass('white');
+
+			if (!details.players[i]) return;
+
+			_ref.addClass(details.players[i]);
+			
+			_ref.show();
+		});
+
+		inst.show();
+		_self.shake();
+
+		this.instructionTimer = setTimeout(this.hideInstructions.bind(this), details.timer);
 	};
 
 	App.prototype.hideInstructions = function(id) {
 		jC('.instruction').hide();
-		// Remove input listeners
+		jC('.slot').hide();
+		clearTimeout(this.instructionTimer);
 	};
 
 	App.prototype.onEvent = function(evt) {
 		console.log(evt);
 		if (evt.e === 'JOINED_LOBBY') {
+			this.color = evt.details.color;
 			this.changePage('lobby', null, null);
+			this.notify();
+			jC('#hud').addClass(this.color);
 		}
 		if (evt.e === 'GAME_STARTING') {
-			this.changePage('loading', null, null);
+			this.changePage('countdown', null, null);
+			setTimeout(function() {
+				jC('#ready').hide();
+				jC('#go').show();
+			},1000);
 		}
 		if (evt.e === 'GAME_LOADED') {
 			this.startGame();
+			jC('#ready').show();
+			jC('#go').hide();
 		}
-		if (evt.e === 'PLAYERS_NOT_READY') {}
-		if (evt.e === 'LOBBY_FULL') {}
+		if (evt.e === 'GAME_END') {
+			jC('#ready-leave-set').show();
+			jC('#start-unready-set').hide();
+			jC('#game-result').html(evt.details.result);
+			this.changePage('endgame', null, null);
+		}
+		if (evt.e === 'INSTRUCTION') {
+			this.hideInstructions();
+			this.showInstruction(evt.details);
+		}
 	};
 
 	App.prototype.ready = function() {
@@ -158,6 +252,10 @@
 	App.prototype.leave = function() {
 		this.tunnel.emit('userEvent', {e: 'LOGOUT'});
 		this.changePage('splash', null, null);
+		jC('#hud').removeClass('red');
+		jC('#hud').removeClass('green');
+		jC('#hud').removeClass('yellow');
+		jC('#hud').removeClass('blue');
 	};
 
 	App.prototype.requestStart = function() {
@@ -166,12 +264,14 @@
 
 	App.prototype.startGame = function() {
 		this.changePage('gamescene', null, null);
+		this.shakeListener.start();
 		this.hideInstructions();
 	};
 
 	App.prototype.endGame = function() {
 		this.hideInstructions();
-		this.changePage('lobby', null, null);
+		this.shakeListener.stop();
+		this.changePage('splash', null, null);
 	};
 
 	App.prototype._updateStats = function() {

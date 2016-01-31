@@ -2,10 +2,17 @@
 <html>
 	<head>
 		<title>Ritual</title>
+		<meta content="telephone=no" name="format-detection">
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" />
+		<meta name="HandheldFriendly" content="true" />
+
 		<style type="text/css">
 			* {
 				margin:0px;
 				padding:0px;
+			}
+			::-moz-selection, ::selection{
+				background:transparent;
 			}
 			html, body {
 				background-color: black;
@@ -27,6 +34,10 @@
 				width: 50%;
    			text-align: center;
     		height: 50px;
+			}
+
+			h2 {
+				margin-top:10%;
 			}
 
 			.button {
@@ -52,7 +63,7 @@
 				padding-top:13px;
 			}
 
-			.green {
+			.lime {
 				background-color: green;
 			}
 
@@ -62,7 +73,7 @@
 
 			.page-buttons {
 				width: 100%;
-				height: 45%;
+				height: 60%;
 				bottom: 0px;
 				position: absolute;
 				display: block;
@@ -91,44 +102,290 @@
 				display: block;
 				padding-top:15px;
 				text-align:center;
+				z-index:3;
 			}
 
 			.red {
 				color:red;
 			}
+
+			#participants {
+				margin:auto;
+			  width: 50%;
+    		height: 100px;
+    		top: 75px;
+    		position: relative;
+    	}
+
+    	.slot {
+    		height: 50px;
+    		width:25%;
+    		display:block;
+    		float:left;
+    	}
+
+    	.mask {
+    		margin: auto;
+    		height:57px;
+    		width: 105px;
+    		display: block;
+    		position:absolute;
+    		background-size:100%;
+    		background-repeat:no-repeat;
+    	}
+
+    	.slot.red .mask {
+    		background-image: url(images/red.png);
+    	}
+
+    	.slot.green .mask {
+    		background-image: url(images/green.png);
+    	}
+
+    	.slot.blue .mask {
+    		background-image: url(images/blue.png);
+    	}
+
+    	.slot.yellow .mask {
+    		background-image: url(images/yellow.png);
+    	}
+
+    	.slot.white .mask {
+    		background-image: url(images/white.png);
+    	}
+
+    	#hud {
+    		position:absolute;
+    		z-index: 2;
+    		pointer-events:none;
+    		height:100%;
+    		width: 100%;
+     	}
+
+    	.hori {
+    		background-image: url(images/hori-border.png);
+    		background-repeat: repeat-x;
+    		width: 100%;
+    		height:37px;
+    		display: block;
+    	}
+
+    	.vert {
+    		background-image: url(images/vert-border.png);
+    		background-repeat: repeat-y;
+    		height:100%;
+    		width: 44px;
+    		display: block;
+    	}
+
+    	.left-bar {
+    		position: absolute;
+    		left: 0px;
+    	}
+
+    	.right-bar {
+    		position: absolute;
+    		right: 0px;
+    	}
+
+    	.top-bar {
+    		position: absolute;
+    		top:0px;
+    	}
+
+    	.bottom-bar {
+    		position: absolute;
+    		bottom:0px;
+    	}
+
+    	.corner {
+    		width: 75px;
+    		height: 74px;
+    		display: block;
+    	}
+
+    	.tl {
+    		background-image: url(images/corner_tl.png);
+    		position: absolute;
+    		top:-8px;
+    		left:-8px;
+    	}
+
+    	.tl .jewel {
+    		-ms-transform: rotate(135deg); /* IE 9 */
+    		-webkit-transform: rotate(135deg); /* Chrome, Safari, Opera */
+    		transform: rotate(135deg);
+    	}
+
+    	.tr {
+    		background-image: url(images/corner_tr.png);
+    		position: absolute;
+    		top:-8px;
+    		right:-8px;
+    	}
+
+    	.tr .jewel {
+    		-ms-transform: rotate(225deg); /* IE 9 */
+    		-webkit-transform: rotate(225deg); /* Chrome, Safari, Opera */
+    		transform: rotate(225deg);
+    	}
+
+    	.bl {
+    		background-image: url(images/corner_bl.png);
+    		position: absolute;
+    		bottom:-8px;
+    		left:-8px;
+    	}
+
+    	.bl .jewel {
+    		-ms-transform: rotate(45deg); /* IE 9 */
+    		-webkit-transform: rotate(45deg); /* Chrome, Safari, Opera */
+    		transform: rotate(45deg);
+    	}
+
+    	.br {
+    		background-image: url(images/corner_br.png);
+    		position: absolute;
+    		bottom:-8px;
+    		right:-8px;
+    	}
+
+    	.br .jewel {
+    		-ms-transform: rotate(315deg); /* IE 9 */
+    		-webkit-transform: rotate(315deg); /* Chrome, Safari, Opera */
+    		transform: rotate(315deg);
+    	}
+
+    	.top-jewel-holder {
+    		background-image: url(images/corner_mid.png);
+    		width:73px;
+    		height:83px;
+    		position: relative;
+    		margin: auto;
+    		margin-top: -23px;
+    	}
+
+    	.top-jewel-holder .jewel {
+    		margin-top: 29px;
+    		position: absolute;
+    		margin-left: 26px;
+    	}
+
+    	.jewel {
+    		display: block;
+    		margin-top: 25px;
+    		margin-left: 27px;
+    		position: relative;
+    		height: 25px;
+    		width:20px;
+    	}
+
+    	#hud.red .jewel {
+    		background-image: url(images/red-jewel.png);
+    	}
+
+    	#hud.green .jewel {
+    		background-image: url(images/green-jewel.png);
+    	}
+
+    	#hud.yellow .jewel {
+    		background-image: url(images/yellow-jewel.png);
+    	}
+
+    	#hud.blue .jewel {
+    		background-image: url(images/blue-jewel.png);
+    	}
+
+    	#wrapper {
+    		background-color: black;
+    	}
+
+    	#game-result {
+    		text-align: center;
+    		margin-top: 13%;
+    	}
 		</style>
 	</head>
 	<body>
 		<div id="wrapper">
+			<div id="hud">
+				<div class="hori top-bar"></div>
+				<div class="hori bottom-bar"></div>
+				<div class="vert left-bar"></div>
+				<div class="vert right-bar"></div>
+				<div class="top-jewel-holder">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner tl">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner tr">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner bl">
+					<div class="jewel"></div>
+				</div>
+				<div class="corner br">
+					<div class="jewel"></div>
+				</div>
+			</div>
 			<div id="splash" class="page">
 				<h1>Tap to join!</h1>
+			</div>
+			<div id="endgame" class="page">
+				<h2>End of the ritual!</h2>
+				<div id="game-result"></div>
+				<div class="page-buttons">
+					<div id="return-button" class="big lime button">Back to title</div>
+				</div>
 			</div>
 			<div id="lobby" class="page">
 				<h2>Now waiting in lobby!</h2>
 				<div class="page-buttons" id="ready-leave-set">
-					<div id="ready-button" class="big green button">Ready</div>
+					<div id="ready-button" class="big lime button">Ready</div>
 					<div id="leave-button" class="medium orange button">Leave</div>
 				</div>
 				<div class="page-buttons" id="start-unready-set" style="display:none;">
-					<div id="start-button" class="big green button">Start game!</div>
+					<div id="start-button" class="big lime button">Start game!</div>
 					<div id="unready-button" class="medium orange button">Unready</div>
 				</div>
 			</div>
 			<div id="loading" class="page">
 				<h1>Loading...</h1>
 			</div>
+			<div id="countdown" class="page">
+				<h1 id="ready" style="color:#007f00;">Ready...</h1>
+				<h1 id="go" style="display:none;color:#7f0000;">GO!</h1>
+			</div>
 			<div id="gamescene" class="page">
-				<div id="swippe-inst" class="instruction">
-					<h1>Swipe here!</h1>
+				<div id="SWIPE_LEFT-inst" class="instruction">
+					<h1>Swipe left!</h1>
 				</div>
-				<div id="shake-inst" class="instruction">
+				<div id="SWIPE_RIGHT-inst" class="instruction">
+					<h1>Swipe right!</h1>
+				</div>
+				<div id="TILT-inst" class="instruction">
 					<h1>Shake it!</h1>
 				</div>
-				<div id="tap-inst" class="instruction">
+				<div id="TAP-inst" class="instruction">
 					<h1>Tap!</h1>
 				</div>
-				<div id="hold-inst" class="instruction">
+				<div id="HOLD-inst" class="instruction">
 					<h1>Hold!</h1>
+				</div>
+				<div id="participants">
+					<div class="slot">
+						<div class="mask"></div>
+					</div>
+					<div class="slot">
+						<div class="mask"></div>
+					</div>
+					<div class="slot">
+						<div class="mask"></div>
+					</div>
+					<div class="slot">
+						<div class="mask"></div>
+					</div>
 				</div>
 			</div>
 			<div class="error-messages">
@@ -137,10 +394,10 @@
 		</div>
 		<!-- Scripts -->
 		<script src="main.js"></script>
-		<script src="jquery.min.js"></script>
-		<script src="socket.io.min.js"></script>
-		<script src="hammer.min.js"></script>
-		<script src="fulltilt.min.js"></script>
+		<script src="libs/jquery.min.js"></script>
+		<script src="libs/socket.io.min.js"></script>
+		<script src="libs/hammer.min.js"></script>
+		<script src="libs/shake.js"></script>
 
 		<script>
 			window.ritual = new App();
