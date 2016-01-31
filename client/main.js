@@ -60,12 +60,15 @@
 		this.tunnel.on('connect', function(){
 			_self._connected = true;
 		});
+		this.tunnel.on('error', this.onError.bind(this));
 		this.tunnel.on('gameEvent', this.onEvent.bind(this));
 		this.tunnel.on('errorEvent', this.onError.bind(this));
 		
 		if (this.debug) {
 			//this._statsCounter = setInterval(this._updateStats.bind(this), 1000);
 		}
+
+		//this.onError('Test');
 
 		// Body inits
 		jC('.page').hide();
@@ -139,6 +142,17 @@
 		if ('vibrate' in navigator) {
 			navigator.vibrate([200,100,200]);
 		}
+		var elem = jC('#wrapper');
+		elem.css('backgroundColor', '#333');
+		setTimeout(function() {
+			elem.css('backgroundColor', 'black');
+			setTimeout(function() {
+				elem.css('backgroundColor', '#333');
+				setTimeout(function() {
+					elem.css('backgroundColor', 'black');
+				},100);
+			},50);
+		},100);
 	};
 
 	App.prototype.shake = function() {
@@ -209,10 +223,19 @@
 			jC('#ready').show();
 			jC('#go').hide();
 		}
+		if (evt.e === 'PLAYER_LIST_UPDATE') {
+			if (this._currentPage === 'lobby') {
+				jC('.lobby-mask').hide();
+				evt.details.players.forEach(function(col) {
+					jC('#lobby-mask-' + col).show();
+				});
+			}
+		}
 		if (evt.e === 'GAME_END') {
 			jC('#ready-leave-set').show();
 			jC('#start-unready-set').hide();
 			jC('#game-result').html(evt.details.result);
+			jC('#lobby-status').html('Now waiting in lobby!');
 			this.shakeListener.stop();
 			this.changePage('endgame', null, null);
 		}
@@ -224,6 +247,7 @@
 
 	App.prototype.ready = function() {
 		this.tunnel.emit('userEvent', {e: 'READY'});
+		jC('#lobby-status').html('Waiting for other players...');
 		jC('#ready-leave-set').hide();
 		jC('#start-unready-set').show();
 	};
@@ -243,6 +267,7 @@
 
 	App.prototype.unready = function() {
 		this.tunnel.emit('userEvent', {e: 'UNREADY'});
+		jC('#lobby-status').html('Now waiting in lobby!');
 		jC('#ready-leave-set').show();
 		jC('#start-unready-set').hide();
 	};

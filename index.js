@@ -27,7 +27,7 @@ var connections = [];
 // Limit of players
 var playerLimit = 4;
 // Minimum players required to start
-var playerMin = 1;
+var playerMin = 2;
 // Screen connection
 var projector = null;
 // Projector port
@@ -38,14 +38,14 @@ var clientPort = 3000;
 var serverPort = 3080;
 // Instruction timer
 var instructionTimer = null;
-// Time to complete an instruction
+// --------------------------------------------!-Time to complete an instruction
 var instructionTimeLimit = 1000*3;
-// Min time between instructions
+// ----------------------------------------------!-Min time between instructions
 var instructionsMinDelay = 1000;
-// Max time between instructions
+// ----------------------------------------------!-Max time between instructions
 var instructionsMaxDelay = 1000*2;
-// Length of a match
-var gameTimeLimit = 1000 * 20;
+// ----------------------------------------------------------!-Length of a match
+var gameTimeLimit = 1000 * 60;
 // Re-insert player timer
 var regenPlayerTimer = 1000 * 2;
 // Is a game in progress
@@ -54,13 +54,13 @@ var gameRunning = false;
 var totemScore = 0;
 // Totem timer
 var totemTimer = null;
-// Totem step rate
+// ------------------------------------------------------------!-Totem step rate
 var totemStep = 1000/2;
-// Score goal
+// -----------------------------------------------------------------!-Score goal
 var scoreGoal = 1000;
 // Game timer
 var gameTimer = null;
-// Point map
+// ------------------------------------------------------------------!-Point map
 var points = [2,2,5,3,1];
 // Expect map
 var expectMap = {
@@ -142,13 +142,16 @@ Connection.prototype.requestStart = function() {
 		return p.ready;
 	});
 
-	if (gameRunning) return;
+	if (gameRunning) {
+		return this.emit(this, 'errorEvent', {e: 'GAME_IN_PROGRESS'});
+	}
 
 	if (players.length < playerMin) {
 		return this.emit(this, 'errorEvent', {e: 'NOT_ENOUGH_PLAYERS'});
 	}
 
 	if (canLaunch) {
+		gameRunning = true;
 		players.forEach(function(p){
 			p.ready = false;
 			p.ingame = true
@@ -162,8 +165,8 @@ Connection.prototype.requestStart = function() {
 			_self.broadcast(players, 'gameEvent', {e: 'GAME_LOADED'});
 			_self.emit(projector, 'gameEvent', {e: 'GAME_LOADED'});
 			// Start sending events
-			availablePlayerStore = availablePlayerStore.splice(0, players.length);
-			gameRunning = true;
+			availablePlayerStore = colors.concat().splice(0, players.length);
+			
 			colors = ['red', 'green', 'yellow', 'blue'];
 			totemScore = 0;
 			totemTimer = setInterval(_self.stepTotem.bind(_self), totemStep);
@@ -178,20 +181,32 @@ Connection.prototype.requestStart = function() {
 
 Connection.prototype.joinLobby = function() {
 	if (gameRunning) {
-		return this.emit('errorEvent', {
+		return this.emit(this, 'errorEvent', {
 			e: 'GAME_IN_PROGRESS'
 		});
 	}
 
 	if (players.length < playerLimit) {
 		players.push(this);
-		this.color = colors.shift();
+		this.color = availablePlayerStore.shift();
 		this.emit(this, 'gameEvent', {
 			e: 'JOINED_LOBBY', 
 			details: { 
 				color: this.color
 			}
 		});
+
+		var _payload = {
+			e: 'PLAYER_LIST_UPDATE',
+			details: {
+				players: players.map(function(p) {
+					return p.color;
+				})
+			}
+		};
+
+		this.broadcast(players, 'gameEvent', _payload);
+		this.emit(projector, 'gameEvent', _payload);
 	}
 	else {
 		this.emit(this, 'errorEvent', {e: 'LOBBY_FULL'});
@@ -214,12 +229,27 @@ Connection.prototype.broadcast = function(peers, evt, payload) {
 	});
 };
 
-Connection.prototype.disconnect = function() {
+Connection.prototype.disconnect = function(stripOnly) {
 	var i = players.indexOf(this);
-	
-	if (this.color)	colors.unshift(this.color);
 
 	if (i>-1) players.splice(i,1);
+
+	if (gameRunning || stripOnly === true) return;
+	if (this.color && availablePlayerStore.indexOf(this.color) === -1) {
+		availablePlayerStore.unshift(this.color);
+	}
+
+	var _payload = {
+		e: 'PLAYER_LIST_UPDATE',
+		details: {
+			players: players.map(function(p) {
+				return p.color;
+			})
+		}
+	};
+
+	Connection.prototype.broadcast.call(this, players, 'gameEvent', _payload);
+	Connection.prototype.emit.call(this, projector, 'gameEvent', _payload);
 }
 
 function initConnection(socket) {
@@ -242,7 +272,7 @@ function endGame() {
 	var _payload = {
 		e: 'GAME_END',
 		details: {
-			result: (totemScore >= scoreGoal)?'success':'failure'
+			result: (totemScore >= scoreGoal)?'The ritual was a great Success, the crowd wants more!':'You have shamed yourself - the ritual was a failure!'
 		}
 	};
 
@@ -250,7 +280,7 @@ function endGame() {
 	Connection.prototype.emit(projector, 'gameEvent', _payload);
 
 	players.forEach(function(e) {
-		e.disconnect();
+		e.disconnect(true);
 	});
 }
 
@@ -264,28 +294,32 @@ function sendInstructionEvent(noMove) {
 
 	var _actionId = Math.floor(Math.random()*instructions.length);
 	var _playerId = Math.floor(Math.random()*players.length);
-	var _numPlayersNeeded = 1 + Math.floor(Math.random()*(players.length -1));
+	var _numPlayersNeeded = 1 + Math.floor(Math.random()*players.length);
 	var _isAnonymous = Math.floor(Math.random()*2);
 	var _targetPlayers = [];
-
-	var _targetId;
-	var _targetColor;
 
 	// If anon or not
 	if (_isAnonymous === 0) {
 		console.log('need to choose from ' + JSON.stringify(availablePlayerStore));
 		for (var i = 0; i<_numPlayersNeeded; i++) {
-			if (availablePlayerStore.length > 0) {
-				_targetId = Math.floor(Math.random()*availablePlayerStore.length);
-				_targetColor = availablePlayerStore.splice(_targetId,1)[0];
-				_targetPlayers.push(_targetColor);
-				setTimeout(function(){
-					availablePlayerStore.push(_targetColor);
-				}, regenPlayerTimer);
-			}
-			else {
-				_targetPlayers.push('white');
-			}
+			(function(_i) {
+				var _targetId;
+				var _targetColor;
+
+				if (availablePlayerStore.length > 0) {
+					_targetId = Math.floor(Math.random()*availablePlayerStore.length);
+					_targetColor = availablePlayerStore.splice(_targetId,1)[0];
+					_targetPlayers.push(_targetColor);
+					setTimeout(function(){
+						if (availablePlayerStore.indexOf(_targetColor) === -1) {
+							availablePlayerStore.push(_targetColor);
+						}
+					}, regenPlayerTimer);
+				}
+				else {
+					_targetPlayers.push('white');
+				}
+			})(i);
 		}
 	}
 	else {

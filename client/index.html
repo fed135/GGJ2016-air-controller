@@ -14,6 +14,16 @@
 			::-moz-selection, ::selection{
 				background:transparent;
 			}
+			/*Lock landscape */
+			@media (orientation: portrait) {
+				body {
+					-webkit-transform: rotate(-90deg);
+					-moz-transform: rotate(-90deg);
+					-ms-transform: rotate(-90deg);
+					transform: rotate(-90deg);
+				}
+			}
+
 			html, body {
 				background-color: black;
 				height:100%;
@@ -24,20 +34,29 @@
 				font-family:Arial;
 			}
 			h1, h2 {
+    		color: white;
+    		text-shadow: 
+    			 2px  2px 0 rgba(255,255,255,0.2), 
+    			-2px -2px 0 rgba(255,255,255,0.2), 
+    			 2px -2px 0 rgba(255,255,255,0.2),
+    			-2px  2px 0 rgba(255,255,255,0.2);
+			}
+
+			h2 {
+				margin-top:75px;
+				text-align: center;
+			}
+
+			h1.center {
 				margin:auto;
 				top:0;
 				bottom:0;
 				left:0;
 				right:0;
 				position:absolute;
-				font-style: italic;
 				width: 50%;
    			text-align: center;
     		height: 50px;
-			}
-
-			h2 {
-				margin-top:10%;
 			}
 
 			.button {
@@ -48,33 +67,58 @@
 				cursor: pointer;
 				position:relative;
 				margin: auto;
-				margin-top:50px;
+				margin-top:20px;
 			}
 
 			.big {
-				width:40%;
-				height:35px;
-				padding-top:18px;
+				width:303px;
+				height:113px;
+				overflow:hidden;
+				background-position: 0px -113px;
+				background-size: 100%;
+			}
+
+			.big:active {
+				background-position: 0px 0px;
+			}
+
+			.start-btn {
+				background-image: url(images/btn_start.png);
+			}
+
+			.ready-btn {
+				background-image: url(images/btn_ready.png);
+			}
+
+			.return-btn {
+				margin-top:80px;
+				background-image: url(images/btn_return.png);
 			}
 
 			.medium {
-				width:30%;
-				height:30px;
-				padding-top:13px;
+				width:244px;
+				height:89px;
+				overflow:hidden;
+				background-position: 0px -89px;
+				margin-top:0px;
 			}
 
-			.lime {
-				background-color: green;
+			.medium:active {
+				background-position: 0px 0px;
 			}
 
-			.orange {
-				background-color: orange;
+			.leave-btn {
+				background-image: url(images/btn_leave.png);
+			}
+
+			.unready-btn {
+				width:314px;
+				background-image: url(images/btn_unready.png);
 			}
 
 			.page-buttons {
 				width: 100%;
-				height: 60%;
-				bottom: 0px;
+				top: 90px;
 				position: absolute;
 				display: block;
 			}
@@ -93,8 +137,15 @@
 				display: none;
 			}
 
+			.instruction h1 {
+				text-align: center;
+    		top: 200px;
+    		position: absolute;
+    		width: 100%;
+			}
+
 			.error-messages {
-				background-color: #333;
+				background-color: rgba(33,33,33,0.5);
 				width: 100%;
 				height: 35px;
 				position:absolute;
@@ -111,14 +162,14 @@
 
 			#participants {
 				margin:auto;
-			  width: 50%;
+			  width: 85%;
     		height: 100px;
     		top: 75px;
     		position: relative;
     	}
 
     	.slot {
-    		height: 50px;
+    		height: 100px;
     		width:25%;
     		display:block;
     		float:left;
@@ -126,27 +177,28 @@
 
     	.mask {
     		margin: auto;
-    		height:57px;
-    		width: 105px;
+    		height:100%;
+    		width:80%;
     		display: block;
-    		position:absolute;
+    		position:relative;
     		background-size:100%;
     		background-repeat:no-repeat;
+    		background-position:center;
     	}
 
-    	.slot.red .mask {
+    	.slot.red .mask, #lobby-mask-red {
     		background-image: url(images/red.png);
     	}
 
-    	.slot.green .mask {
+    	.slot.green .mask, #lobby-mask-green {
     		background-image: url(images/green.png);
     	}
 
-    	.slot.blue .mask {
+    	.slot.blue .mask, #lobby-mask-blue {
     		background-image: url(images/blue.png);
     	}
 
-    	.slot.yellow .mask {
+    	.slot.yellow .mask, #lobby-mask-yellow {
     		background-image: url(images/yellow.png);
     	}
 
@@ -280,6 +332,34 @@
     		width:20px;
     	}
 
+    	.lobby-mask {
+    		width:125px;
+    		height:114px;
+    		background-size:100%;
+    		background-repeat:no-repeat;
+    		position:absolute;
+    	}
+
+    	#lobby-mask-red {
+    		top: 65px;
+    		left:75px;
+    	}
+
+    	#lobby-mask-green {
+    		top: 65px;
+    		right:75px;
+    	}
+
+    	#lobby-mask-yellow {
+    		bottom: 20px;
+    		left:75px;
+    	}
+
+    	#lobby-mask-blue {
+    		bottom: 20px;
+    		right:75px;
+    	}
+
     	#hud.red .jewel {
     		background-image: url(images/red-jewel.png);
     	}
@@ -302,7 +382,9 @@
 
     	#game-result {
     		text-align: center;
-    		margin-top: 13%;
+    		top:45px;
+    		width:100%;
+    		position:absolute;
     	}
 		</style>
 	</head>
@@ -330,32 +412,36 @@
 				</div>
 			</div>
 			<div id="splash" class="page">
-				<h1>Tap to join!</h1>
+				<h1 class="center">Tap to join!</h1>
 			</div>
 			<div id="endgame" class="page">
 				<h2>End of the ritual!</h2>
-				<div id="game-result"></div>
+				<h2 id="game-result"></h2>
 				<div class="page-buttons">
-					<div id="return-button" class="big lime button">Back to title</div>
+					<div id="return-button" class="big return-btn button"></div>
 				</div>
 			</div>
 			<div id="lobby" class="page">
-				<h2>Now waiting in lobby!</h2>
+				<h2 id="lobby-status">Now waiting in lobby!</h2>
 				<div class="page-buttons" id="ready-leave-set">
-					<div id="ready-button" class="big lime button">Ready</div>
-					<div id="leave-button" class="medium orange button">Leave</div>
+					<div id="ready-button" class="big ready-btn button"></div>
+					<div id="leave-button" class="medium leave-btn button"></div>
 				</div>
 				<div class="page-buttons" id="start-unready-set" style="display:none;">
-					<div id="start-button" class="big lime button">Start game!</div>
-					<div id="unready-button" class="medium orange button">Unready</div>
+					<div id="start-button" class="big start-btn button"></div>
+					<div id="unready-button" class="medium unready-btn button"></div>
 				</div>
+				<div id="lobby-mask-red" class="lobby-mask"></div>
+				<div id="lobby-mask-green" class="lobby-mask"></div>
+				<div id="lobby-mask-blue" class="lobby-mask"></div>
+				<div id="lobby-mask-yellow" class="lobby-mask"></div>
 			</div>
 			<div id="loading" class="page">
 				<h1>Loading...</h1>
 			</div>
 			<div id="countdown" class="page">
-				<h1 id="ready" style="color:#007f00;">Ready...</h1>
-				<h1 id="go" style="display:none;color:#7f0000;">GO!</h1>
+				<h1 id="ready" class="center">Ready...</h1>
+				<h1 id="go" class="center">GO!</h1>
 			</div>
 			<div id="gamescene" class="page">
 				<div id="SWIPE_LEFT-inst" class="instruction">
